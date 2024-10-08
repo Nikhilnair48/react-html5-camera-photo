@@ -25,7 +25,7 @@ let showVideoTimeoutId = null;
 /*
 Inspiration: https://www.html5rocks.com/en/tutorials/getusermedia/intro/
 */
-function Camera({
+function Camera ({
   onTakePhoto,
   onTakePhotoAnimationDone,
   onCameraError,
@@ -40,7 +40,7 @@ function Camera({
   isFullscreen,
   sizeFactor,
   onCameraStart,
-  onCameraStop,
+  onCameraStop
 }) {
   const [dataUri, setDataUri] = useState('');
   const [isShowVideo, setIsShowVideo] = useState(true);
@@ -52,7 +52,7 @@ function Camera({
     mediaStream,
     cameraStartError,
     cameraStopError,
-    getDataUri,
+    getDataUri
   ] = useLibCameraPhoto(
     videoRef,
     idealFacingMode,
@@ -89,13 +89,13 @@ function Camera({
     }
   }, [cameraStopError]);
 
-  function clearShowVideoTimeout() {
+  function clearShowVideoTimeout () {
     if (showVideoTimeoutId) {
       clearTimeout(showVideoTimeoutId);
     }
   }
 
-  function getIsImageMirror() {
+  function getIsImageMirror () {
     if (isImageMirror !== undefined) {
       return isImageMirror;
     }
@@ -109,12 +109,12 @@ function Camera({
     return false;
   }
 
-  function handleTakePhoto() {
+  function handleTakePhoto () {
     const configDataUri = {
       sizeFactor: sizeFactor,
       imageType: imageType,
       imageCompression: imageCompression,
-      isImageMirror: getIsImageMirror(),
+      isImageMirror: getIsImageMirror()
     };
 
     const dataUri = getDataUri(configDataUri);
@@ -183,7 +183,7 @@ Camera.propTypes = {
   isFullscreen: PropTypes.bool,
   sizeFactor: PropTypes.number,
   onCameraStart: PropTypes.func,
-  onCameraStop: PropTypes.func,
+  onCameraStop: PropTypes.func
 };
 
 // Removed Camera.defaultProps
@@ -191,7 +191,7 @@ Camera.propTypes = {
 export {
   Camera,
   FACING_MODES,
-  IMAGE_TYPES,
+  IMAGE_TYPES
 };
 
 export default Camera;
