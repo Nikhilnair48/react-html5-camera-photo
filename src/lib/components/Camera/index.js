@@ -23,42 +23,65 @@ import './styles/camera.css';
 let showVideoTimeoutId = null;
 
 /*
-Inspiration : https://www.html5rocks.com/en/tutorials/getusermedia/intro/
+Inspiration: https://www.html5rocks.com/en/tutorials/getusermedia/intro/
 */
-function Camera (props) {
+function Camera({
+  onTakePhoto,
+  onTakePhotoAnimationDone,
+  onCameraError,
+  idealFacingMode,
+  idealResolution,
+  imageType,
+  isImageMirror,
+  isSilentMode,
+  isDisplayStartCameraError = true,
+  imageCompression,
+  isMaxResolution,
+  isFullscreen,
+  sizeFactor,
+  onCameraStart,
+  onCameraStop,
+}) {
   const [dataUri, setDataUri] = useState('');
   const [isShowVideo, setIsShowVideo] = useState(true);
   const [cameraStartDisplayError, setCameraStartDisplayError] = useState('');
 
-  let videoRef = useRef(null);
+  const videoRef = useRef(null);
 
   const [
     mediaStream,
     cameraStartError,
     cameraStopError,
-    getDataUri
-  ] = useLibCameraPhoto(videoRef, props.idealFacingMode, props.idealResolution, props.isMaxResolution);
+    getDataUri,
+  ] = useLibCameraPhoto(
+    videoRef,
+    idealFacingMode,
+    idealResolution,
+    isMaxResolution
+  );
 
   useEffect(() => {
     if (mediaStream) {
-      if (typeof props.onCameraStart === 'function') {
-        props.onCameraStart(mediaStream);
+      if (typeof onCameraStart === 'function') {
+        onCameraStart(mediaStream);
       }
     } else {
-      if (typeof props.onCameraStop === 'function') {
-        props.onCameraStop();
+      if (typeof onCameraStop === 'function') {
+        onCameraStop();
       }
     }
-  }, [mediaStream]);
+  }, [mediaStream, onCameraStart, onCameraStop]);
 
   useEffect(() => {
     if (cameraStartError) {
-      setCameraStartDisplayError(`${cameraStartError.name} ${cameraStartError.message}`);
-      if (typeof props.onCameraError === 'function') {
-        props.onCameraError(cameraStartError);
+      setCameraStartDisplayError(
+        `${cameraStartError.name} ${cameraStartError.message}`
+      );
+      if (typeof onCameraError === 'function') {
+        onCameraError(cameraStartError);
       }
     }
-  }, [cameraStartError]);
+  }, [cameraStartError, onCameraError]);
 
   useEffect(() => {
     if (cameraStopError) {
@@ -66,42 +89,42 @@ function Camera (props) {
     }
   }, [cameraStopError]);
 
-  function clearShowVideoTimeout () {
+  function clearShowVideoTimeout() {
     if (showVideoTimeoutId) {
       clearTimeout(showVideoTimeoutId);
     }
   }
 
-  function getIsImageMirror () {
-    if (props.isImageMirror !== undefined) {
-      return props.isImageMirror;
+  function getIsImageMirror() {
+    if (isImageMirror !== undefined) {
+      return isImageMirror;
     }
 
-    // TODO: When we get a camera id detect if is a facing mode USER or ENVIRONMENT
-    if (props.idealFacingMode === FACING_MODES.USER) {
+    // TODO: When we get a camera ID, detect if it's facing mode USER or ENVIRONMENT
+    if (idealFacingMode === FACING_MODES.USER) {
       return true;
     }
 
-    // By default and if is FACING_MODE.ENVIRONMENT is false
+    // By default, and if FACING_MODE.ENVIRONMENT, it's false
     return false;
   }
 
-  function handleTakePhoto () {
+  function handleTakePhoto() {
     const configDataUri = {
-      sizeFactor: props.sizeFactor,
-      imageType: props.imageType,
-      imageCompression: props.imageCompression,
-      isImageMirror: getIsImageMirror()
+      sizeFactor: sizeFactor,
+      imageType: imageType,
+      imageCompression: imageCompression,
+      isImageMirror: getIsImageMirror(),
     };
 
-    let dataUri = getDataUri(configDataUri);
+    const dataUri = getDataUri(configDataUri);
 
-    if (!props.isSilentMode) {
+    if (!isSilentMode) {
       playClickAudio();
     }
 
-    if (typeof props.onTakePhoto === 'function') {
-      props.onTakePhoto(dataUri);
+    if (typeof onTakePhoto === 'function') {
+      onTakePhoto(dataUri);
     }
 
     setDataUri(dataUri);
@@ -111,53 +134,39 @@ function Camera (props) {
     showVideoTimeoutId = setTimeout(() => {
       setIsShowVideo(true);
 
-      if (typeof props.onTakePhotoAnimationDone === 'function') {
-        props.onTakePhotoAnimationDone(dataUri);
+      if (typeof onTakePhotoAnimationDone === 'function') {
+        onTakePhotoAnimationDone(dataUri);
       }
     }, 900);
   }
 
-  let videoStyles = getVideoStyles(isShowVideo, getIsImageMirror());
-  let showHideImgStyle = getShowHideStyle(!isShowVideo);
+  const videoStyles = getVideoStyles(isShowVideo, getIsImageMirror());
+  const showHideImgStyle = getShowHideStyle(!isShowVideo);
 
-  let classNameFullscreen = props.isFullscreen ? 'react-html5-camera-photo-fullscreen' : '';
+  const classNameFullscreen = isFullscreen
+    ? 'react-html5-camera-photo-fullscreen'
+    : '';
+
   return (
-    <div className={'react-html5-camera-photo ' + classNameFullscreen}>
+    <div className={`react-html5-camera-photo ${classNameFullscreen}`}>
       <DisplayError
-        cssClass={'display-error'}
-        isDisplayError={props.isDisplayStartCameraError}
+        cssClass="display-error"
+        isDisplayError={isDisplayStartCameraError}
         errorMsg={cameraStartDisplayError}
       />
-      <WhiteFlash
-        isShowWhiteFlash={!isShowVideo}
-      />
-      <img
-        style={showHideImgStyle}
-        alt="camera"
-        src={dataUri}
-      />
+      <WhiteFlash isShowWhiteFlash={!isShowVideo} />
+      <img style={showHideImgStyle} alt="camera" src={dataUri} />
       <video
         style={videoStyles}
         ref={videoRef}
-        autoPlay={true}
-        muted={true}
+        autoPlay
+        muted
         playsInline
       />
-      <CircleButton
-        isClicked={!isShowVideo}
-        onClick={handleTakePhoto}
-      />
+      <CircleButton isClicked={!isShowVideo} onClick={handleTakePhoto} />
     </div>
   );
 }
-
-export {
-  Camera,
-  FACING_MODES,
-  IMAGE_TYPES
-};
-
-export default Camera;
 
 Camera.propTypes = {
   onTakePhoto: PropTypes.func,
@@ -174,9 +183,15 @@ Camera.propTypes = {
   isFullscreen: PropTypes.bool,
   sizeFactor: PropTypes.number,
   onCameraStart: PropTypes.func,
-  onCameraStop: PropTypes.func
+  onCameraStop: PropTypes.func,
 };
 
-Camera.defaultProps = {
-  isDisplayStartCameraError: true
+// Removed Camera.defaultProps
+
+export {
+  Camera,
+  FACING_MODES,
+  IMAGE_TYPES,
 };
+
+export default Camera;
